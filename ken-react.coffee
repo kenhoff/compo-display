@@ -2,7 +2,7 @@
 browserTz = jstz.determine().name()
 
 JamhubContainer = React.createClass
-	render: -> React.createElement "div", className: "jamhubContainer",
+	render: -> React.createElement "div", id: "jamhubContainer",
 		React.createElement JamStartDisplay, time: (this.state.jamStartTime - this.state.currentTime)
 		if (this.state.jamStartTime - this.state.currentTime) < 0
 			React.createElement ThemeDisplay, theme: this.state.theme
