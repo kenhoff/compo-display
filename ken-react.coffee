@@ -37,16 +37,13 @@ JamStartDisplay = React.createClass
 		d = this.props.time
 		# ("0000" + num).substr(-4,4)
 
-		days = (d / (1000 * 60 * 60 * 24))
-		hours = (d / (1000 * 60 * 60)) % 24
-		minutes = (d / (1000 * 60)) % 60
-		seconds = (d / 1000) % 60
 
-		dString = Math.floor(days) + " days, " + Math.floor(hours) + " hours, " + Math.floor(minutes) + " minutes, " + Math.floor(seconds) + " seconds"
-		# dString = this.props.time
-		if d > 0
-			React.createElement "div", null, dString
-		else
+		if d < 0
 			React.createElement "div", null, "Time's up!"
+
+		else
+			dString = simpleCountdown(d)
+			React.createElement "div", null, dString
+
 
 React.render React.createElement(JamhubContainer), document.getElementById("jamhub")
