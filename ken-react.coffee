@@ -4,9 +4,13 @@ browserTz = jstz.determine().name()
 JamhubContainer = React.createClass
 	render: -> React.createElement "div", className: "jamhubContainer",
 		React.createElement JamStartDisplay, time: (this.state.jamStartTime - this.state.currentTime)
-		React.createElement JamStartControl, change: this.handleJamStartChange, jamStartTime: this.state.jamStartTime
-		React.createElement ThemeDisplay, theme: this.state.theme
-		React.createElement ThemeControl, onThemeSubmit: this.handleThemeSubmit
+		if (this.state.jamStartTime - this.state.currentTime) < 0
+			React.createElement ThemeDisplay, theme: this.state.theme
+		React.createElement JamControls,
+			handleThemeSubmit: this.handleThemeSubmit
+			jamStartChange: this.handleJamStartChange
+			jamStartTime: this.state.jamStartTime
+		# React.createElement ThemeControl, onThemeSubmit: this.handleThemeSubmit
 	handleJamStartChange: (newJamStartTime) ->
 		this.setState jamStartTime: newJamStartTime
 	handleThemeSubmit: (theme) ->
@@ -14,12 +18,24 @@ JamhubContainer = React.createClass
 	getInitialState: ->
 		theme: ""
 		currentTime: Date.now()
-		jamStartTime: Date.now()
+		jamStartTime: Date.now() + 10000
 	componentDidMount: ->
-		setInterval(this.tick, 500)
+		this.interval = setInterval(this.tick, 50)
+	componentWillUnmount: ->
+		clearInterval this.interval
 	tick: ->
 		this.setState({currentTime: Date.now()})
 		#console.log this.state.currentTime
+
+JamControls = React.createClass
+	render: -> React.createElement "div", className: "jamControls",
+		React.createElement ThemeControl,
+			onThemeSubmit: this.handleThemeSubmit
+		React.createElement JamStartControl,
+			change: this.props.jamStartChange
+			jamStartTime: this.props.jamStartTime
+	handleThemeSubmit: (theme) ->
+		this.props.handleThemeSubmit theme
 
 ThemeDisplay = React.createClass
 	render: -> React.createElement "div", className: "themeDisplay", "The theme is: ", this.props.theme
@@ -39,18 +55,27 @@ JamStartControl = React.createClass
 		# 2014-01-02T11:42
 	render: -> React.createElement "input", {className: "jamStartControl", ref: "jamStartTime", onChange: this.change, type: "datetime-local"}, "jam start time"
 	change: ->
-		console.log React.findDOMNode(this.refs.jamStartTime).value.trim()
+		# console.log React.findDOMNode(this.refs.jamStartTime).value.trim()
 		newStartTime = moment.tz React.findDOMNode(this.refs.jamStartTime).value.trim(), browserTz
 		# newStartTime = React.findDOMNode(this.refs.jamStartTime).value.trim()
 		this.props.change newStartTime.valueOf()
 
 JamStartDisplay = React.createClass
 	render: ->
-		#d = moment(this.props.time).format("HH:mm:ss")
-	
-		d = moment.duration(this.props.time)
+		# this.props.time is milliseconds until jam start
+		d = this.props.time
 		# ("0000" + num).substr(-4,4)
-		dString = d.hours() + ":" + d.minutes() + ":" + d.seconds() + ":" + d.milliseconds()
-		React.createElement "div", null, dString
+
+		days = (d / (1000 * 60 * 60 * 24))
+		hours = (d / (1000 * 60 * 60)) % 24
+		minutes = (d / (1000 * 60)) % 60
+		seconds = (d / 1000) % 60
+
+		dString = Math.floor(days) + " days, " + Math.floor(hours) + " hours, " + Math.floor(minutes) + " minutes, " + Math.floor(seconds) + " seconds"
+		# dString = this.props.time
+		if d > 0
+			React.createElement "div", null, dString
+		else
+			React.createElement "div", null, "Time's up!"
 
 React.render React.createElement(JamhubContainer), document.getElementById("jamhub")
